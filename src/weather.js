@@ -1,13 +1,23 @@
-// TODO: implement using Hono + Open Meteo API
-// Context7 query target: @upstash/context7-mcp resolve-library-id open-meteo
-// Expected API: https://api.open-meteo.com/v1/forecast?latitude=...&longitude=...&current=temperature_2m
-
 /**
  * @param {{ latitude: number, longitude: number }} coords
  * @returns {Promise<{ temperature: number, unit: string }>}
  */
 export async function fetchWeather(coords) {
-  throw new Error('Not implemented')
+  if (!Number.isFinite(coords.latitude) || !Number.isFinite(coords.longitude) ||
+      coords.latitude < -90 || coords.latitude > 90 ||
+      coords.longitude < -180 || coords.longitude > 180) {
+    throw new Error('Invalid coordinates')
+  }
+
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current=temperature_2m`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Weather API error: ${res.status}`)
+
+  const data = await res.json()
+  return {
+    temperature: data.current.temperature_2m,
+    unit: '°C'
+  }
 }
 
 /**
@@ -15,5 +25,5 @@ export async function fetchWeather(coords) {
  * @returns {string}
  */
 export function formatWeather(data) {
-  throw new Error('Not implemented')
+  return `${data.location}: ${data.temperature}${data.unit}`
 }

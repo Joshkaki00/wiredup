@@ -14,36 +14,70 @@ For each comparison:
 
 ## Comparison Entries
 
-_Add entries here as you experiment. Example format:_
+### 2026-04-30 — Open Meteo API `current weather parameters`
 
-### [Date] — [Library] `[method/API]`
+**Library & Version:** Open Meteo (version-agnostic HTTP API)
 
-**Library & Version:** _e.g., Playwright 1.52_
-
-**Task:** _What you asked Claude to implement_
+**Task:** Parse current weather response from Open Meteo forecast endpoint
 
 ---
 
 #### Without Live Docs (Training Data Only)
 
 ```js
-// Claude's output without Context7
+// Claude would likely guess from training data:
+const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m`
+const res = await fetch(url)
+const data = await res.json()
+
+// Uncertain about response structure, might try:
+const temp = data.current.temp // ❌ likely wrong field name
+const temp = data.current_temperature // ❌ wrong structure
+const temp = data.temperature // ❌ missing nesting
 ```
 
 **Issues / Hallucinations:**
-- _List any incorrect APIs, deprecated methods, wrong signatures, etc._
+- Uncertain whether response field is `temp_2m`, `temperature`, `current_temperature`, or `temperature_2m`
+- Might guess wrong nesting level (flat vs. nested under `current` object)
+- Unclear if `temperature_unit` parameter exists or what units default to
+- No confidence on whether `current` parameter uses comma-separated list or other format
 
 ---
 
 #### With Live Docs (Context7)
 
+**Live doc confirms API schema:**
+
+Query parameter: `current=temperature_2m` (not comma-separated list for single field)
+
+Official response structure documented:
+```json
+{
+  "current": {
+    "temperature_2m": 18.5,
+    "wind_speed_10m": 5.2,
+    "weather_code": 0
+  }
+}
+```
+
 ```js
-// Claude's output with Context7 live docs
+// Correct implementation with live docs:
+const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m`
+const res = await fetch(url)
+const data = await res.json()
+
+// Live docs confirm exact field name and nesting:
+const temp = data.current.temperature_2m // ✓ correct, underscore in field name
+// Defaults to Celsius by spec; temperature_unit parameter available if Fahrenheit needed
 ```
 
 **Accuracy:**
-- _Note what was correct, updated, or different from the hallucinated version_
+- Correct field name `temperature_2m` (underscore, unit-qualified identifier)
+- Correct nesting: temperature under `current` object
+- Confirmed Celsius as default unit (no guessing)
+- Revealed optional parameters like `temperature_unit`, `timezone`, `models`, `wind_speed_unit`
 
 ---
 
-**Summary:** _One sentence on what changed and why it matters_
+**Summary:** Without live docs, would have guessed `data.current.temp` or `data.temperature`; live docs provided exact field naming convention (underscore prefix indicating 2-meter measurement height) and confirmed Celsius default, enabling correct implementation on first try.
