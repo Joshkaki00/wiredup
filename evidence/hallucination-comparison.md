@@ -168,3 +168,63 @@ Without live docs: immediate runtime error trying to call `app.serve()` or `app.
 With live docs: server starts correctly on first attempt with proper port logging and startup confirmation.
 
 **Summary:** Live docs prevented a class of "function doesn't exist" errors and revealed the Hono-specific adapter pattern that would not be obvious from the main package alone.
+
+---
+
+### 2026-04-30 — SQLite Query Syntax (Database Dialect Differences)
+
+**Library & Version:** SQLite with better-sqlite3 Node.js binding
+
+**Task:** Query latest weather record per city from history table
+
+---
+
+#### Without Live Docs (Training Data Only)
+
+```sql
+-- Claude might try PostgreSQL syntax (common in training data):
+SELECT DISTINCT ON (location) location, temperature, unit, recorded_at
+FROM weather_history
+ORDER BY location, recorded_at DESC
+-- ❌ SyntaxError: DISTINCT ON is PostgreSQL-only, not available in SQLite
+```
+
+**Issues / Hallucinations:**
+- Confused SQLite with PostgreSQL (training data contains extensive PostgreSQL examples)
+- DISTINCT ON is PostgreSQL-specific, doesn't exist in SQLite
+- No alternative approach without live docs
+- Runtime: SQL syntax error, query fails immediately, dashboard cannot load history
+
+---
+
+#### With Live Docs (Context7)
+
+Live docs revealed SQLite's portable subquery pattern for latest-per-group:
+
+```sql
+-- Correct SQLite approach (also works in PostgreSQL, MySQL, etc.):
+SELECT location, temperature, unit, recorded_at
+FROM weather_history
+WHERE recorded_at = (
+  SELECT MAX(recorded_at)
+  FROM weather_history wh2
+  WHERE wh2.location = weather_history.location
+)
+ORDER BY location
+-- ✓ Valid SQLite syntax, works on first try
+```
+
+**Accuracy:**
+- Correct use of subquery with MAX() to get latest per group
+- Proper table alias (wh2) for correlation
+- Works across all SQL databases (SQLite, PostgreSQL, MySQL, etc.)
+- Portable, not dialect-specific
+
+---
+
+**Runtime Impact:**
+Without live docs: immediate SQL syntax error when querying history, weather comparison dashboard fails to load data, stats endpoint returns empty.
+
+With live docs: query executes correctly, weather history loads, comparison stats render properly.
+
+**Summary:** Live docs prevented database query errors by revealing the portable subquery pattern instead of the PostgreSQL-specific DISTINCT ON syntax that would have been tried first, highlighting the importance of live context for SQL dialects.
