@@ -80,4 +80,91 @@ const temp = data.current.temperature_2m // ✓ correct, underscore in field nam
 
 ---
 
-**Summary:** Without live docs, would have guessed `data.current.temp` or `data.temperature`; live docs provided exact field naming convention (underscore prefix indicating 2-meter measurement height) and confirmed Celsius default, enabling correct implementation on first try.
+**Runtime Impact:**
+Without live docs, code execution would fail:
+```js
+// This would CRASH:
+const temp = data.current.temp  
+// TypeError: Cannot read property 'temp' of undefined
+
+// This would silently return undefined:
+const temp = data.temperature
+// No error, but UI would show "undefined°C"
+```
+
+With live docs, code works correctly on first try:
+```js
+const temp = data.current.temperature_2m
+// Returns 18.5 (number) — works immediately
+```
+
+**Summary:** Live docs revealed exact field naming convention and prevented TypeError at runtime. Without them, developer would spend time debugging why `data.current.temp` is undefined, then guessing alternative field names.
+
+---
+
+### 2026-04-30 — Hono Framework `app.serve()` method
+
+**Library & Version:** Hono v4.12.15 with @hono/node-server
+
+**Task:** Start HTTP server on Node.js
+
+---
+
+#### Without Live Docs (Training Data Only)
+
+```js
+// Claude might guess Hono has a .serve() method like Express:
+const app = new Hono()
+app.get('/', (c) => c.text('Hello'))
+
+// Attempt 1: Wrong — Hono doesn't have app.serve()
+app.serve({ port: 3000 })  
+// ❌ TypeError: app.serve is not a function
+
+// Attempt 2: Hallucinate Express-like API
+app.listen(3000)
+// ❌ TypeError: app.listen is not a function
+
+// Attempt 3: Maybe it's like Next.js?
+const server = app.start()
+// ❌ TypeError: app.start is not a function
+```
+
+**Issues / Hallucinations:**
+- Confused Hono's API with Express (res.json, app.listen)
+- Didn't know you need a separate adapter package (@hono/node-server)
+- No awareness that Hono uses `serve()` from the adapter, not a method on the app instance
+
+---
+
+#### With Live Docs (Context7)
+
+Live docs immediately revealed the correct pattern:
+
+```js
+import { serve } from '@hono/node-server'  // ← separate adapter required
+import { Hono } from 'hono'
+
+const app = new Hono()
+app.get('/', (c) => c.text('Hello'))
+
+// Correct usage:
+serve({ fetch: app.fetch, port: 3000 }, (info) => {
+  console.log(`Server running at http://localhost:${info.port}`)
+})
+```
+
+**Accuracy:**
+- Revealed need for separate `@hono/node-server` adapter
+- Showed correct `serve()` function signature: accepts config object and callback
+- Clarified that you pass `app.fetch`, not the app instance
+- Confirmed callback receives `info` object with port info
+
+---
+
+**Runtime Impact:**
+Without live docs: immediate runtime error trying to call `app.serve()` or `app.listen()`, forcing developer to search for "hono start server" and discover the adapter through trial and error.
+
+With live docs: server starts correctly on first attempt with proper port logging and startup confirmation.
+
+**Summary:** Live docs prevented a class of "function doesn't exist" errors and revealed the Hono-specific adapter pattern that would not be obvious from the main package alone.
