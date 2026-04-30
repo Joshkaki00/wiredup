@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { serve } from '@hono/node-server'
 import { fetchWeather } from './weather.js'
 
 /**
@@ -48,8 +49,12 @@ export function createServer() {
 export async function start(port = 3000) {
   const app = createServer()
   return new Promise((resolve) => {
-    const server = app.serve({ port, fetch: app.fetch })
-    console.log(`Server running on port ${port}`)
-    resolve(server)
+    const server = serve(
+      { fetch: app.fetch, port },
+      (info) => {
+        console.log(`Server running at http://localhost:${info.port}`)
+        resolve(server)
+      }
+    )
   })
 }

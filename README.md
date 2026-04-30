@@ -31,9 +31,9 @@ wiredup/
 
 ## Progress
 
-- [ ] **V1.0** — Configuration & Live Docs
-- [ ] **V1.1** — Second Integration (Playwright)
-- [ ] **V1.2** — Hallucination Comparison & Polish
+- [x] **V1.0** — Configuration & Live Docs
+- [x] **V1.1** — Server Fix & Playwright Visual Verification
+- [x] **V1.2** — Hallucination Comparison Evidence & Polish
 
 ## Getting Started
 
@@ -41,13 +41,44 @@ wiredup/
 # Install dependencies
 npm install
 
-# Verify MCP servers are connected (in Claude Code)
-# Run: /mcp
+# Install Playwright browsers
+npx playwright install
 
-# Run tests
+# Run unit tests (Node.js built-in test runner)
 npm test
+
+# Run Playwright visual tests
+npm run test:playwright
+
+# Start the dev server
+npm run dev
 ```
 
 ## What's Next
 
-_To be filled in after completing V1.2._
+### MCP Servers in Action
+
+**Context7 (Live Documentation)**  
+Context7 queries provided live, version-specific API documentation before writing code. Queried:
+- **Hono routing** — confirmed context object `c` with `c.json()` method (not Express-style `req/res`)
+- **Open Meteo API** — revealed exact response schema with `temperature_2m` field under `current` object
+
+Without live docs, hallucinations would have included wrong field names (`data.temperature`, `data.current_temperature`) and incorrect handler patterns. Live docs enabled correct implementation on first attempt.
+
+**Playwright (Browser Automation)**  
+Playwright tests (`test:playwright`) spin up the dev server and verify:
+- Page title and DOM elements render correctly
+- API endpoints return valid JSON shapes
+- Catches UI regressions if the `/data` endpoint breaks
+
+### Evidence Files
+
+- `evidence/live-docs-usage.md` — Documents 3 Context7 queries and their impact (Hono patterns, Open Meteo schema)
+- `evidence/hallucination-comparison.md` — Side-by-side comparison showing what Claude would guess from training data vs. what live docs revealed
+
+### Future Improvements
+
+- Add more weather variables (wind speed, humidity, weather code)
+- Integrate additional MCP servers (e.g., GitHub API, database access)
+- Build a frontend dashboard to visualize real-time weather data
+- Document performance gains from live docs across different library APIs
