@@ -2,11 +2,18 @@
   "mcpServers": {
     "context7": {
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
+      "args": ["-y", "@upstash/context7-mcp"],
+      "description": "Live library documentation (used for Hono, Open Meteo, @hono/node-server, GitHub API)"
     },
     "playwright": {
       "command": "npx",
-      "args": ["-y", "@playwright/mcp"]
+      "args": ["-y", "@playwright/mcp"],
+      "description": "Browser automation for UI testing and visual verification"
+    },
+    "github": {
+      "description": "GitHub REST API integration for fetching project documentation and references",
+      "type": "native",
+      "integration": "src/github.js"
     }
   }
 }
