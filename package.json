@@ -1,0 +1,24 @@
+{
+  "name": "wiredup",
+  "version": "0.0.1",
+  "description": "Connect dev tools to live data sources using MCP servers",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/**/*.test.js",
+    "test:watch": "node --test --watch tests/**/*.test.js",
+    "lint": "eslint src/ tests/ --fix",
+    "dev": "node src/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "context7",
+    "playwright",
+    "claude-code",
+    "ai-assisted-development"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}
